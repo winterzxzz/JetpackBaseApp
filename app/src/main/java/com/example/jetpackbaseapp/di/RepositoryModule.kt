@@ -1,5 +1,6 @@
 package com.example.jetpackbaseapp.di
 
+import com.example.jetpackbaseapp.data.local.dao.PostDao
 import com.example.jetpackbaseapp.data.remote.api.ApiService
 import com.example.jetpackbaseapp.data.repository.PostRepositoryImpl
 import com.example.jetpackbaseapp.data.repository.UserRepositoryImpl
@@ -17,8 +18,11 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun providePostRepository(api: ApiService): PostRepository {
-        return PostRepositoryImpl(api)
+    fun providePostRepository(
+        api: ApiService,
+        postDao: PostDao
+    ): PostRepository {
+        return PostRepositoryImpl(api, postDao)
     }
 
     @Provides
