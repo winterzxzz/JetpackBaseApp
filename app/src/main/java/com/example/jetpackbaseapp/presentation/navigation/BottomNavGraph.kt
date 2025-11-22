@@ -3,13 +3,13 @@ package com.example.jetpackbaseapp.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import com.example.jetpackbaseapp.presentation.screens.detail.DetailScreen
-import com.example.jetpackbaseapp.presentation.screens.home.HomeScreen
-import com.example.jetpackbaseapp.presentation.screens.users.UsersScreen
+import com.example.jetpackbaseapp.presentation.screens.optimization.OptimizationMenuScreen
+import com.example.jetpackbaseapp.presentation.screens.optimization.advanced.AdvancedOptimizationScreen
+import com.example.jetpackbaseapp.presentation.screens.optimization.cache.CacheOptimizationScreen
+import com.example.jetpackbaseapp.presentation.screens.optimization.datatype.DataTypeOptimizationScreen
+import com.example.jetpackbaseapp.presentation.screens.optimization.recursion.RecursionOptimizationScreen
 
 @Composable
 fun BottomNavGraph(
@@ -18,39 +18,39 @@ fun BottomNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = BottomNavItem.Posts.route,
+        startDestination = "optimization",
         modifier = modifier
     ) {
-        composable(route = BottomNavItem.Posts.route) {
-            HomeScreen(
-                onPostClick = { postId ->
-                    navController.navigate(Screen.Detail.createRoute(postId))
+        composable(route = "optimization") {
+            OptimizationMenuScreen(
+                onNavigate = { route ->
+                    navController.navigate(route)
                 }
             )
         }
 
-        composable(route = BottomNavItem.Users.route) {
-            UsersScreen(
-                onUserClick = { userId ->
-                    // Navigate to user detail if needed
-                }
+        // Optimization Demo Screens
+        composable(route = "recursion_demo") {
+            RecursionOptimizationScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 
-        composable(
-            route = Screen.Detail.route,
-            arguments = listOf(
-                navArgument("postId") {
-                    type = NavType.IntType
-                }
+        composable(route = "cache_demo") {
+            CacheOptimizationScreen(
+                onBack = { navController.popBackStack() }
             )
-        ) { backStackEntry ->
-            val postId = backStackEntry.arguments?.getInt("postId") ?: 0
-            DetailScreen(
-                postId = postId,
-                onBack = {
-                    navController.popBackStack()
-                }
+        }
+
+        composable(route = "datatype_demo") {
+            DataTypeOptimizationScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = "advanced_demo") {
+            AdvancedOptimizationScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

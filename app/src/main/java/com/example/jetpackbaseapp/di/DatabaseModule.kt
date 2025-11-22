@@ -2,8 +2,7 @@ package com.example.jetpackbaseapp.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.jetpackbaseapp.data.local.dao.PostDao
-import com.example.jetpackbaseapp.data.local.dao.UserDao
+import com.example.jetpackbaseapp.data.local.dao.CacheDemoDao
 import com.example.jetpackbaseapp.data.local.database.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -30,13 +29,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun providePostDao(database: AppDatabase): PostDao {
-        return database.postDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserDao(database: AppDatabase): UserDao {
-        return database.userDao()
+    fun provideCacheDemoDao(database: AppDatabase): CacheDemoDao {
+        return database.cacheDemoDao()
     }
 }

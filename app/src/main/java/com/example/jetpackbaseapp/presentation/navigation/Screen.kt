@@ -1,11 +1,8 @@
 package com.example.jetpackbaseapp.presentation.navigation
 
 sealed class Screen(val route: String) {
-    object Home : Screen("home")
-    object Detail : Screen("detail/{postId}") {
-        fun createRoute(postId: Int) = "detail/$postId"
-    }
-    object UserDetail : Screen("user/{userId}") {
-        fun createRoute(userId: Int) = "user/$userId"
-    }
+    object Optimization : Screen("optimization")
+    object RecursionDemo : Screen("recursion_demo")
+    object CacheDemo : Screen("cache_demo")
+    object DataTypeDemo : Screen("datatype_demo")
 }

@@ -4,13 +4,12 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 android {
     namespace = "com.example.jetpackbaseapp"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.jetpackbaseapp"
@@ -41,6 +40,18 @@ android {
     buildFeatures {
         compose = true
     }
+    
+    // Enable Strong Skipping Mode for Compose
+    composeCompiler {
+        enableStrongSkippingMode = true
+    }
+}
+
+// Baseline Profile configuration
+baselineProfile {
+    // Don't build on every iteration of a full assemble.
+    // Instead enable generation directly for the release build variant.
+    automaticGenerationDuringBuild = false
 }
 
 dependencies {
@@ -92,4 +103,7 @@ dependencies {
 
     // Debug tools
     debugImplementation(libs.androidx.compose.ui.tooling)
+    
+    // Baseline Profile
+    implementation(libs.androidx.profileinstaller)
 }
