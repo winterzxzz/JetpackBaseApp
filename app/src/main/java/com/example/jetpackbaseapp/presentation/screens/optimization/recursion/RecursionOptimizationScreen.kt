@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,25 +104,12 @@ fun RecursionOptimizationScreen(
                         if (iterative != null && recursive != null && recursive.executionTimeNs > 0 && iterative.executionTimeNs > 0) {
                             val speedup = recursive.executionTimeNs.toDouble() / iterative.executionTimeNs.coerceAtLeast(1).toDouble()
                             Text(
-                                "⚡ Iterative nhanh hơn ${String.format("%.1f", speedup)}x",
+                                "⚡ Iterative nhanh hơn ${String.format(Locale.US, "%.1f", speedup)}x",
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.titleSmall
                             )
                         }
                     }
-                }
-            }
-
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("💡 Giải thích:", style = MaterialTheme.typography.titleSmall)
-                    Text("• Đệ quy: O(2^n) - chậm với n lớn")
-                    Text("• Vòng lặp: O(n) - nhanh và hiệu quả")
-                    Text("• Memoization: O(n) - tối ưu đệ quy")
                 }
             }
         }
@@ -131,7 +119,7 @@ fun RecursionOptimizationScreen(
 private fun formatNanosToText(nanos: Long): String {
     return when {
         nanos < 1000 -> "$nanos ns"
-        nanos < 1_000_000 -> String.format("%.1f µs", nanos / 1000.0)
-        else -> String.format("%.2f ms", nanos / 1_000_000.0)
+        nanos < 1_000_000 -> String.format(Locale.US, "%.1f µs", nanos / 1000.0)
+        else -> String.format(Locale.US, "%.2f ms", nanos / 1_000_000.0)
     }
 }

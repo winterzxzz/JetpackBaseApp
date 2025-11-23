@@ -108,24 +108,6 @@ fun DataTypeOptimizationScreen(
             items(state.kotlinComparisons) { comparison ->
                 ComparisonCard(comparison.typeName, comparison.operationTimeNs, comparison.memoryBytes)
             }
-
-            // Info
-            item {
-                Spacer(Modifier.height(8.dp))
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("💡 Tips:", style = MaterialTheme.typography.titleSmall)
-                        Text("• int > Integer (primitive nhanh hơn)", style = MaterialTheme.typography.bodySmall)
-                        Text("• Pre-size collections khi biết size", style = MaterialTheme.typography.bodySmall)
-                        Text("• StringBuilder cho string concat", style = MaterialTheme.typography.bodySmall)
-                        Text("• Data class cho performance", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
         }
     }
 }
