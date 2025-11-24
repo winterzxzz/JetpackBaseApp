@@ -21,7 +21,7 @@ fun RecursionOptimizationScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-    var inputN by remember { mutableStateOf("10") }
+    var inputN by remember { mutableStateOf("40") }
 
     Scaffold(
         topBar = {
@@ -46,7 +46,7 @@ fun RecursionOptimizationScreen(
             OutlinedTextField(
                 value = inputN,
                 onValueChange = { inputN = it },
-                label = { Text("Nhập n (0-40)") },
+                label = { Text("Nhập n") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )

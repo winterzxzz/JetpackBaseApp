@@ -10,7 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-
+import com.example.jetpackbaseapp.domain.model.DataTypeComparison
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DataTypeOptimizationScreen(
@@ -44,15 +44,14 @@ fun DataTypeOptimizationScreen(
                 Spacer(Modifier.height(4.dp))
                 Button(
                     onClick = { viewModel.comparePrimitiveVsBoxed() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isLoading
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Chạy test")
                 }
             }
 
             items(state.primitiveComparisons) { comparison ->
-                ComparisonCard(comparison.typeName, comparison.operationTimeNs, comparison.memoryBytes)
+                ComparisonCard(comparison)
             }
 
             // Collections
@@ -62,15 +61,14 @@ fun DataTypeOptimizationScreen(
                 Spacer(Modifier.height(4.dp))
                 Button(
                     onClick = { viewModel.compareCollections() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isLoading
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Chạy test")
                 }
             }
 
             items(state.collectionComparisons) { comparison ->
-                ComparisonCard(comparison.typeName, comparison.operationTimeNs, comparison.memoryBytes)
+                ComparisonCard(comparison)
             }
 
             // Strings
@@ -80,50 +78,48 @@ fun DataTypeOptimizationScreen(
                 Spacer(Modifier.height(4.dp))
                 Button(
                     onClick = { viewModel.compareStringOperations() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isLoading
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Chạy test")
                 }
             }
 
             items(state.stringComparisons) { comparison ->
-                ComparisonCard(comparison.typeName, comparison.operationTimeNs, comparison.memoryBytes)
+                ComparisonCard(comparison)
             }
 
-            // Kotlin optimizations
-            item {
-                Spacer(Modifier.height(8.dp))
-                Text("4. Kotlin Features", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(4.dp))
-                Button(
-                    onClick = { viewModel.compareKotlinOptimizations() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isLoading
-                ) {
-                    Text("Chạy test")
+            // Error message
+            if (state.error.isNotEmpty()) {
+                item {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        state.error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
-            }
-
-            items(state.kotlinComparisons) { comparison ->
-                ComparisonCard(comparison.typeName, comparison.operationTimeNs, comparison.memoryBytes)
             }
         }
     }
 }
 
 @Composable
-private fun ComparisonCard(name: String, timeNs: Long, memoryBytes: Long) {
+private fun ComparisonCard(comparison: DataTypeComparison) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Text(name, style = MaterialTheme.typography.bodyMedium)
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                comparison.typeName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            )
+            Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("⏱ ${formatTime(timeNs)}", style = MaterialTheme.typography.bodySmall)
-                if (memoryBytes > 0) {
-                    Text("💾 ${memoryBytes}B", style = MaterialTheme.typography.bodySmall)
+                Text("⏱ ${formatTime(comparison.operationTimeNs)}", style = MaterialTheme.typography.bodySmall)
+                if (comparison.memoryBytes > 0) {
+                    Text("💾 ${formatMemory(comparison.memoryBytes)}", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -138,3 +134,12 @@ private fun formatTime(nanos: Long): String {
         else -> "${nanos / 1_000_000_000}s"
     }
 }
+
+private fun formatMemory(bytes: Long): String {
+    return when {
+        bytes < 1024 -> "${bytes}B"
+        bytes < 1024 * 1024 -> "${bytes / 1024}KB"
+        else -> "${bytes / (1024 * 1024)}MB"
+    }
+}
+

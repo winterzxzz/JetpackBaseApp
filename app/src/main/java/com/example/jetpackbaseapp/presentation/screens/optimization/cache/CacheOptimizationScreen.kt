@@ -47,7 +47,7 @@ fun CacheOptimizationScreen(
             OutlinedTextField(
                 value = inputId,
                 onValueChange = { inputId = it },
-                label = { Text("Nhập ID dữ liệu (e.g., 1, 2, 3)") },
+                label = { Text("Input") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )

@@ -24,44 +24,84 @@ class DataTypeOptimizationViewModel @Inject constructor() : ViewModel() {
      */
     fun comparePrimitiveVsBoxed() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _state.value = _state.value.copy(primitiveComparisons = emptyList())
 
             try {
                 val results = withContext(Dispatchers.Default) {
-                    val iterations = 1_000_000
+                    val iterations = 10_000_000
                     val comparisons = mutableListOf<DataTypeComparison>()
+                    val runtime = Runtime.getRuntime()
 
-                    // Test int (primitive)
-                    var intSum = 0
-                    val intTime = measureNanoTime {
-                        repeat(iterations) { i ->
-                            intSum += i
+                    // ==================== Test 1: INT (PRIMITIVE) ====================
+                    // Cùng cấp phát 1 mảng IntArray, cùng chạy 1 vòng lặp gán giá trị
+                    // Chạy 3 lần để lấy trung bình (tránh fluctuation)
+                    var intTimeSum = 0L
+                    var intMemorySum = 0L
+                    repeat(3) {
+                        System.gc()
+                        Thread.sleep(100)
+                        val memBefore = runtime.totalMemory() - runtime.freeMemory()
+
+                        val intTime = measureNanoTime {
+                            // Cấp phát: IntArray(size) - mảng primitive
+                            val intArray = IntArray(iterations / 100)
+                            // Chạy vòng lặp: gán int vào array
+                            repeat(intArray.size) { i ->
+                                intArray[i] = i // Gán primitive int - NHANH
+                            }
                         }
+
+                        val memAfter = runtime.totalMemory() - runtime.freeMemory()
+                        intTimeSum += intTime
+                        intMemorySum += (memAfter - memBefore).coerceAtLeast(0)
                     }
+                    val avgIntTime = intTimeSum / 3
+                    val avgIntMemory = intMemorySum / 3
+
                     comparisons.add(
                         DataTypeComparison(
                             typeName = "int (primitive)",
-                            memoryBytes = 4,
-                            operationTimeNs = intTime,
+                            memoryBytes = avgIntMemory,
+                            operationTimeNs = avgIntTime,
                             isPrimitive = true,
-                            description = "4 bytes, lưu trên stack, cực nhanh"
+                            description = ""
                         )
                     )
 
-                    // Test Integer (boxed)
-                    var integerSum = 0
-                    val integerTime = measureNanoTime {
-                        repeat(iterations) { i ->
-                            integerSum += Integer.valueOf(i) // Boxing
+                    // ==================== Test 2: INTEGER (BOXED) ====================
+                    // Cùng cấp phát 1 mảng Array<Integer>, cùng chạy 1 vòng lặp gán giá trị
+                    // Nhưng dùng Integer.valueOf() để boxing
+                    // Chạy 3 lần để lấy trung bình
+                    var integerTimeSum = 0L
+                    var integerMemorySum = 0L
+                    repeat(3) {
+                        System.gc()
+                        Thread.sleep(100)
+                        val memBefore = runtime.totalMemory() - runtime.freeMemory()
+
+                        val integerTime = measureNanoTime {
+                            // Cấp phát: Array<Integer>(size) - mảng object
+                            val intArray = Array(iterations / 100) { 0 }
+                            // Chạy vòng lặp: gán Integer vào array
+                            repeat(intArray.size) { i ->
+                                intArray[i] = Integer.valueOf(i) // Boxing mỗi lần - CHẬM, tốn bộ nhớ
+                            }
                         }
+
+                        val memAfter = runtime.totalMemory() - runtime.freeMemory()
+                        integerTimeSum += integerTime
+                        integerMemorySum += (memAfter - memBefore).coerceAtLeast(0)
                     }
+                    val avgIntegerTime = integerTimeSum / 3
+                    val avgIntegerMemory = integerMemorySum / 3
+
                     comparisons.add(
                         DataTypeComparison(
                             typeName = "Integer (boxed)",
-                            memoryBytes = 16, // Object header + int value
-                            operationTimeNs = integerTime,
+                            memoryBytes = avgIntegerMemory,
+                            operationTimeNs = avgIntegerTime,
                             isPrimitive = false,
-                            description = "16 bytes, lưu trên heap, chậm hơn do boxing/unboxing"
+                            description = ""
                         )
                     )
 
@@ -69,13 +109,11 @@ class DataTypeOptimizationViewModel @Inject constructor() : ViewModel() {
                 }
 
                 _state.value = _state.value.copy(
-                    isLoading = false,
                     primitiveComparisons = results
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Error: ${e.message}"
+                    error = "Primitive test error: ${e.message}"
                 )
             }
         }
@@ -86,64 +124,89 @@ class DataTypeOptimizationViewModel @Inject constructor() : ViewModel() {
      */
     fun compareCollections() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _state.value = _state.value.copy(collectionComparisons = emptyList())
 
             try {
                 val results = withContext(Dispatchers.Default) {
                     val size = 10_000
                     val comparisons = mutableListOf<DataTypeComparison>()
+                    val runtime = Runtime.getRuntime()
 
-                    // ArrayList
+                    // ==================== Test 1: ArrayList (PRE-SIZED) ====================
+                    // Cấp phát ArrayList với capacity từ đầu
+                    // Add 10_000 phần tử vào - không phải resize
+                    System.gc()
+                    Thread.sleep(50)
+                    val memBefore1 = runtime.totalMemory() - runtime.freeMemory()
                     val arrayListTime = measureNanoTime {
-                        val list = ArrayList<Int>(size) // Pre-sized
+                        val list = ArrayList<Int>(size) // Cấp phát capacity = size từ đầu
                         repeat(size) { i ->
-                            list.add(i)
+                            list.add(i) // Thêm phần tử - chỉ tăng size, không resize mảng
                         }
-                        list.forEach { _ -> }
+                        list.forEach { _ -> } // Duyệt hết
                     }
+                    val memAfter1 = runtime.totalMemory() - runtime.freeMemory()
+                    val memUsed1 = (memAfter1 - memBefore1).coerceAtLeast(0)
+
                     comparisons.add(
                         DataTypeComparison(
                             typeName = "ArrayList (pre-sized)",
-                            memoryBytes = size * 4L,
+                            memoryBytes = memUsed1,
                             operationTimeNs = arrayListTime,
                             isPrimitive = false,
-                            description = "Tối ưu: khởi tạo với capacity, tránh resize"
+                            description = ""
                         )
                     )
 
-                    // ArrayList without pre-sizing
+                    // ==================== Test 2: ArrayList (NO PRE-SIZE) ====================
+                    // Cấp phát ArrayList không biết capacity
+                    // Add 10_000 phần tử vào - phải resize nhiều lần
+                    System.gc()
+                    Thread.sleep(50)
+                    val memBefore2 = runtime.totalMemory() - runtime.freeMemory()
                     val arrayListNoSizeTime = measureNanoTime {
-                        val list = ArrayList<Int>() // No pre-size
+                        val list = ArrayList<Int>() // Không cấp phát capacity, mặc định = 10
                         repeat(size) { i ->
-                            list.add(i)
+                            list.add(i) // Mỗi khi vượt capacity → phải resize (copy array, tốn thời gian)
                         }
-                        list.forEach { _ -> }
+                        list.forEach { _ -> } // Duyệt hết
                     }
+                    val memAfter2 = runtime.totalMemory() - runtime.freeMemory()
+                    val memUsed2 = (memAfter2 - memBefore2).coerceAtLeast(0)
+
                     comparisons.add(
                         DataTypeComparison(
                             typeName = "ArrayList (no pre-size)",
-                            memoryBytes = size * 4L * 2, // Resizing overhead
+                            memoryBytes = memUsed2,
                             operationTimeNs = arrayListNoSizeTime,
                             isPrimitive = false,
-                            description = "Không tối ưu: phải resize nhiều lần"
+                            description = ""
                         )
                     )
 
-                    // Array (primitive)
+                    // ==================== Test 3: IntArray (PRIMITIVE) ====================
+                    // Cấp phát mảng primitive - kích thước cố định
+                    // Gán 10_000 int vào - không có resize, không có boxing
+                    System.gc()
+                    Thread.sleep(50)
+                    val memBefore3 = runtime.totalMemory() - runtime.freeMemory()
                     val arrayTime = measureNanoTime {
-                        val array = IntArray(size)
+                        val array = IntArray(size) // Cấp phát IntArray size = 10_000
                         repeat(size) { i ->
-                            array[i] = i
+                            array[i] = i // Gán primitive int - không boxing, chỉ ghi giá trị
                         }
-                        array.forEach { _ -> }
+                        array.forEach { _ -> } // Duyệt hết
                     }
+                    val memAfter3 = runtime.totalMemory() - runtime.freeMemory()
+                    val memUsed3 = (memAfter3 - memBefore3).coerceAtLeast(0)
+
                     comparisons.add(
                         DataTypeComparison(
                             typeName = "IntArray (primitive)",
-                            memoryBytes = size * 4L,
+                            memoryBytes = memUsed3,
                             operationTimeNs = arrayTime,
                             isPrimitive = true,
-                            description = "Nhanh nhất: không boxing, liên tục trong memory"
+                            description = ""
                         )
                     )
 
@@ -151,13 +214,11 @@ class DataTypeOptimizationViewModel @Inject constructor() : ViewModel() {
                 }
 
                 _state.value = _state.value.copy(
-                    isLoading = false,
                     collectionComparisons = results
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Error: ${e.message}"
+                    error = "Collection test error: ${e.message}"
                 )
             }
         }
@@ -168,45 +229,65 @@ class DataTypeOptimizationViewModel @Inject constructor() : ViewModel() {
      */
     fun compareStringOperations() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _state.value = _state.value.copy(stringComparisons = emptyList())
 
             try {
                 val results = withContext(Dispatchers.Default) {
                     val iterations = 1000
                     val comparisons = mutableListOf<DataTypeComparison>()
+                    val runtime = Runtime.getRuntime()
 
-                    // String concatenation (BAD)
+                    // ==================== Test 1: String Concatenation (+) ====================
+                    // Dùng toán tử + để nối string
+                    // Mỗi lần result += "..." → Tạo String object mới, copy dữ liệu cũ, thêm dữ liệu mới
+                    // Chạy 1000 lần → 1000 String objects được tạo ra
+                    System.gc()
+                    Thread.sleep(50)
+                    val memBefore1 = runtime.totalMemory() - runtime.freeMemory()
                     val concatTime = measureNanoTime {
                         var result = ""
                         repeat(iterations) { i ->
-                            result += "Item $i, " // Creates new String object each time
+                            result += "Item $i, " // Mỗi lần += tạo String object mới (CHẬM)
                         }
                     }
+                    val memAfter1 = runtime.totalMemory() - runtime.freeMemory()
+                    val memUsed1 = (memAfter1 - memBefore1).coerceAtLeast(0)
+
                     comparisons.add(
                         DataTypeComparison(
                             typeName = "String concatenation (+)",
-                            memoryBytes = iterations * 50L, // Approximate
+                            memoryBytes = memUsed1,
                             operationTimeNs = concatTime,
                             isPrimitive = false,
-                            description = "❌ RẤT CHẬM: tạo String object mới mỗi lần"
+                            description = ""
                         )
                     )
 
-                    // StringBuilder (GOOD)
+                    // ==================== Test 2: StringBuilder ====================
+                    // Dùng StringBuilder (mutable buffer)
+                    // Cấp phát buffer, append từng chuỗi nhỏ vào buffer
+                    // Cuối cùng gọi toString() 1 lần để tạo String
+                    // Chạy 1000 lần → chỉ 1 String object được tạo
+                    System.gc()
+                    Thread.sleep(50)
+                    val memBefore2 = runtime.totalMemory() - runtime.freeMemory()
                     val stringBuilderTime = measureNanoTime {
-                        val builder = StringBuilder(iterations * 20)
+                        val builder = StringBuilder(iterations * 20) // Cấp phát buffer từ đầu
                         repeat(iterations) { i ->
-                            builder.append("Item ").append(i).append(", ")
+                            builder.append("Item ").append(i).append(", ") // Append vào buffer - NHANH
                         }
-                        val result = builder.toString()
+                        val result = builder.toString() // Tạo String cuối cùng (1 lần duy nhất)
                     }
+                    val memAfter2 = runtime.totalMemory() - runtime.freeMemory()
+                    val memUsed2 = (memAfter2 - memBefore2).coerceAtLeast(0)
+
                     comparisons.add(
                         DataTypeComparison(
                             typeName = "StringBuilder",
-                            memoryBytes = iterations * 20L,
+                            memoryBytes = memUsed2,
                             operationTimeNs = stringBuilderTime,
                             isPrimitive = false,
-                            description = "✅ TỐI ƯU: sử dụng mutable buffer"
+                            description = ""
                         )
                     )
 
@@ -214,101 +295,20 @@ class DataTypeOptimizationViewModel @Inject constructor() : ViewModel() {
                 }
 
                 _state.value = _state.value.copy(
-                    isLoading = false,
                     stringComparisons = results
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Error: ${e.message}"
+                    error = "String test error: ${e.message}"
                 )
             }
         }
-    }
-
-    /**
-     * Demo val vs var, data class optimization
-     */
-    fun compareKotlinOptimizations() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-
-            try {
-                val results = withContext(Dispatchers.Default) {
-                    val iterations = 100_000
-                    val comparisons = mutableListOf<DataTypeComparison>()
-
-                    // Regular class
-                    class RegularUser(var name: String, var age: Int, var email: String)
-
-                    val regularTime = measureNanoTime {
-                        repeat(iterations) {
-                            val user = RegularUser("John", 30, "john@example.com")
-                            val name = user.name
-                        }
-                    }
-                    comparisons.add(
-                        DataTypeComparison(
-                            typeName = "Regular Class",
-                            memoryBytes = 48, // Object header + fields
-                            operationTimeNs = regularTime,
-                            isPrimitive = false,
-                            description = "Class thông thường: nhiều boilerplate"
-                        )
-                    )
-
-                    // Data class (optimized)
-                    data class DataUser(val name: String, val age: Int, val email: String)
-
-                    val dataClassTime = measureNanoTime {
-                        repeat(iterations) {
-                            val user = DataUser("John", 30, "john@example.com")
-                            val name = user.name
-                        }
-                    }
-                    comparisons.add(
-                        DataTypeComparison(
-                            typeName = "Data Class (val)",
-                            memoryBytes = 48,
-                            operationTimeNs = dataClassTime,
-                            isPrimitive = false,
-                            description = "✅ Tối ưu: immutable, có equals/hashCode/copy tự động"
-                        )
-                    )
-
-                    comparisons
-                }
-
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    kotlinComparisons = results
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Error: ${e.message}"
-                )
-            }
-        }
-    }
-
-    fun runAllComparisons() {
-        comparePrimitiveVsBoxed()
-        compareCollections()
-        compareStringOperations()
-        compareKotlinOptimizations()
-    }
-
-    fun clearResults() {
-        _state.value = DataTypeState()
     }
 }
 
 data class DataTypeState(
-    val isLoading: Boolean = false,
     val primitiveComparisons: List<DataTypeComparison> = emptyList(),
     val collectionComparisons: List<DataTypeComparison> = emptyList(),
     val stringComparisons: List<DataTypeComparison> = emptyList(),
-    val kotlinComparisons: List<DataTypeComparison> = emptyList(),
     val error: String = ""
 )

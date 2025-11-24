@@ -20,7 +20,7 @@ class RecursionOptimizationViewModel @Inject constructor() : ViewModel() {
     val state: StateFlow<RecursionState> = _state.asStateFlow()
 
     /**
-     * Tính Fibonacci bằng đệ quy (KHÔNG TỐI ƯU)
+     * Tính Fibonacci bằng đệ quy
      * Time complexity: O(2^n)
      * Space complexity: O(n) - call stack
      */
@@ -36,29 +36,29 @@ class RecursionOptimizationViewModel @Inject constructor() : ViewModel() {
      */
     private fun fibonacciIterative(n: Int): Long {
         if (n <= 1) return n.toLong()
-        
+
         var prev = 0L
         var current = 1L
-        
+
         repeat(n - 1) {
             val next = prev + current
             prev = current
             current = next
         }
-        
+
         return current
     }
 
     /**
-     * Tính Fibonacci bằng đệ quy có memoization (TỐI ƯU HƠN)
+     * Tính Fibonacci bằng đệ quy có memoization
      * Time complexity: O(n)
      * Space complexity: O(n)
      */
     private fun fibonacciMemoization(n: Int, memo: MutableMap<Int, Long> = mutableMapOf()): Long {
         if (n <= 1) return n.toLong()
-        
+
         memo[n]?.let { return it }
-        
+
         val result = fibonacciMemoization(n - 1, memo) + fibonacciMemoization(n - 2, memo)
         memo[n] = result
         return result
@@ -84,7 +84,7 @@ class RecursionOptimizationViewModel @Inject constructor() : ViewModel() {
                         FibonacciResult(
                             value = iterativeValue,
                             executionTimeNs = iterativeTime,
-                            method = "Iterative (Tối ưu)"
+                            method = "Iterative"
                         )
                     )
 
@@ -97,33 +97,22 @@ class RecursionOptimizationViewModel @Inject constructor() : ViewModel() {
                         FibonacciResult(
                             value = memoValue,
                             executionTimeNs = memoTime,
-                            method = "Memoization (Cache)"
+                            method = "Memoization"
                         )
                     )
 
                     // Test Recursive (chỉ với n nhỏ)
-                    if (n <= 40) {
-                        val recursiveValue: Long
-                        val recursiveTime = measureNanoTime {
-                            recursiveValue = fibonacciRecursive(n)
-                        }
-                        resultsList.add(
-                            FibonacciResult(
-                                value = recursiveValue,
-                                executionTimeNs = recursiveTime,
-                                method = "Recursive (Không tối ưu)"
-                            )
-                        )
-                    } else {
-                        resultsList.add(
-                            FibonacciResult(
-                                value = -1,
-                                executionTimeNs = 0,
-                                method = "Recursive (Không tối ưu)",
-                                stackOverflow = true
-                            )
-                        )
+                    val recursiveValue: Long
+                    val recursiveTime = measureNanoTime {
+                        recursiveValue = fibonacciRecursive(n)
                     }
+                    resultsList.add(
+                        FibonacciResult(
+                            value = recursiveValue,
+                            executionTimeNs = recursiveTime,
+                            method = "Recursive"
+                        )
+                    )
 
                     resultsList
                 }
@@ -137,81 +126,6 @@ class RecursionOptimizationViewModel @Inject constructor() : ViewModel() {
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = "Stack Overflow! Số quá lớn cho đệ quy."
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Error: ${e.message}"
-                )
-            }
-        }
-    }
-
-    /**
-     * Demo tính tổng mảng - Recursive vs Iterative
-     */
-    fun calculateArraySum(size: Int) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-
-            try {
-                val results = withContext(Dispatchers.Default) {
-                    val array = IntArray(size) { it + 1 }
-                    val resultsList = mutableListOf<FibonacciResult>()
-
-                    // Iterative
-                    var iterativeSum = 0L
-                    val iterativeTime = measureNanoTime {
-                        iterativeSum = array.sumOf { it.toLong() }
-                    }
-                    resultsList.add(
-                        FibonacciResult(
-                            value = iterativeSum,
-                            executionTimeNs = iterativeTime,
-                            method = "Array Sum - Iterative"
-                        )
-                    )
-
-                    // Recursive
-                    fun sumRecursive(arr: IntArray, index: Int): Long {
-                        if (index >= arr.size) return 0
-                        return arr[index] + sumRecursive(arr, index + 1)
-                    }
-
-                    if (size <= 10000) {
-                        var recursiveSum = 0L
-                        val recursiveTime = measureNanoTime {
-                            recursiveSum = sumRecursive(array, 0)
-                        }
-                        resultsList.add(
-                            FibonacciResult(
-                                value = recursiveSum,
-                                executionTimeNs = recursiveTime,
-                                method = "Array Sum - Recursive"
-                            )
-                        )
-                    } else {
-                        resultsList.add(
-                            FibonacciResult(
-                                value = -1,
-                                executionTimeNs = 0,
-                                method = "Array Sum - Recursive",
-                                stackOverflow = true
-                            )
-                        )
-                    }
-
-                    resultsList
-                }
-
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    results = results
-                )
-            } catch (e: StackOverflowError) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "Stack Overflow với array size = $size"
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
