@@ -103,11 +103,6 @@ fun RecursionOptimizationScreen(
                             state.results.find { it.method.contains("Recursive") && !it.stackOverflow }
                         if (iterative != null && recursive != null && recursive.executionTimeNs > 0 && iterative.executionTimeNs > 0) {
                             val speedup = recursive.executionTimeNs.toDouble() / iterative.executionTimeNs.coerceAtLeast(1).toDouble()
-                            Text(
-                                "⚡ Iterative nhanh hơn ${String.format(Locale.US, "%.1f", speedup)}x",
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.titleSmall
-                            )
                         }
                     }
                 }

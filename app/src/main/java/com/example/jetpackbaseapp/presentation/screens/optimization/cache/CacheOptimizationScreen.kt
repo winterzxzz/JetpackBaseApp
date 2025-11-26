@@ -47,10 +47,70 @@ fun CacheOptimizationScreen(
             OutlinedTextField(
                 value = inputId,
                 onValueChange = { inputId = it },
-                label = { Text("Input") },
+                label = { Text("Input ID của Item") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Ví dụ: 1, 5, 10, ...") }
             )
+
+            // ==================== HƯỚNG DẪN ====================
+            // Database của bạn TRỐNG ban đầu!
+            //
+            // Lần đầu tiên:
+            // ├─ Nhấn "Tải (có Cache)" ID=5
+            // ├─ Chương trình tìm: Memory ❌ → Disk ❌ → Network ✅ (~1500ms)
+            // ├─ Lưu Item #5 vào: Disk database + Memory cache
+            // └─ Hiển thị kết quả
+            //
+            // Lần thứ 2:
+            // ├─ Nhấn "Tải (có Cache)" ID=5 (item đó)
+            // ├─ Chương trình tìm: Memory ✅ (~ns) - CỰC NHANH!
+            // └─ Không cần fetch network
+            //
+            // Nếu muốn test nhanh:
+            // 1. Nhấn "Preload Data" → Tạo sẵn 10 items trong database
+            // 2. Nhập ID=1-10 → Lấy ngay từ Disk (nhanh ~ms)
+            // 3. Lấy lần 2 → Memory (cực nhanh ~ns)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        val id = inputId.toIntOrNull() ?: 1
+                        viewModel.loadDataWithCache(id)
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isLoading
+                ) {
+                    Text(if (state.isLoading) "Đang tải..." else "Tải (có Cache)")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        val id = inputId.toIntOrNull() ?: 1
+                        viewModel.loadDataWithoutCache(id)
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isLoading
+                ) {
+                    Text("Tải (Không Cache)")
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { viewModel.preloadCache(10) },
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isLoading
+                ) {
+                    Text("Preload Data (1-10)")
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

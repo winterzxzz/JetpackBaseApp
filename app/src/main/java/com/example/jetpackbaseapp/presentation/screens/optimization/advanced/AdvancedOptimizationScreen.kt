@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +24,7 @@ fun AdvancedOptimizationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tối ưu Nâng cao") },
+                title = { Text("Value Classes Demo") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -40,99 +41,24 @@ fun AdvancedOptimizationScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Intro Card
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("🚀 Advanced Optimizations", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(8.dp))
-                    Text("• Value Classes: Zero-cost wrappers")
-                    Text("• Inline Functions: No lambda overhead")
-                    Text("• Strong Skipping: Smart recomposition")
-                    Text("• Baseline Profile: AOT compilation")
-                }
-            }
+            Text(
+                "Value Class ",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
 
-            // Value Classes Section
-            Text("1. Value Classes (@JvmInline)", style = MaterialTheme.typography.titleMedium)
+            
             Button(
-                onClick = { viewModel.testValueClasses() },
+                onClick = { viewModel.testValueClass() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading
             ) {
-                Text(if (state.isLoading) "Testing..." else "Test Value Classes")
+                Text(if (state.isLoading) "Đang chạy test..." else "Chạy Test")
             }
 
-            state.valueClassResults.forEach { comparison ->
-                ValueClassResultCard(comparison)
-            }
-
-            // Inline Functions Section
-            Text("2. Inline Functions", style = MaterialTheme.typography.titleMedium)
-            Button(
-                onClick = { viewModel.testInlineFunctions() },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isLoading
-            ) {
-                Text(if (state.isLoading) "Testing..." else "Test Inline Functions")
-            }
-
-            state.inlineFunctionResults.forEach { comparison ->
-                InlineFunctionResultCard(comparison)
-            }
-
-            // Strong Skipping Mode Info
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("3. Strong Skipping Mode ✅", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Đã bật trong build.gradle.kts:", style = MaterialTheme.typography.bodySmall)
-                    Text("composeCompiler {", style = MaterialTheme.typography.bodySmall)
-                    Text("  enableStrongSkippingMode = true", 
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary)
-                    Text("}", style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.height(8.dp))
-                    Text("💡 Compose tự động skip recomposition cho @Stable/@Immutable composables")
-                }
-            }
-
-            // Baseline Profile Info
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("4. Baseline Profile ✅", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(8.dp))
-                    Text("File: app/src/main/baseline-prof.txt", style = MaterialTheme.typography.bodySmall)
-                    Text("• App startup nhanh hơn ~30%", style = MaterialTheme.typography.bodySmall)
-                    Text("• Giảm jank khi chạy lần đầu", style = MaterialTheme.typography.bodySmall)
-                    Text("• AOT compile critical paths", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-
-            // Summary
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("📊 Tổng kết:", style = MaterialTheme.typography.titleSmall)
-                    Text("✅ Value Classes: Tiết kiệm ~100% memory cho wrappers")
-                    Text("✅ Inline Functions: Giảm 50-70% overhead cho HOF")
-                    Text("✅ Strong Skipping: Tối ưu recomposition tự động")
-                    Text("✅ Baseline Profile: Startup nhanh hơn 30%")
-                }
+            state.valueClassResult?.let { result ->
+                ValueClassResultCard(result)
             }
 
             if (state.error.isNotEmpty()) {
@@ -147,63 +73,94 @@ fun AdvancedOptimizationScreen(
 }
 
 @Composable
-private fun ValueClassResultCard(comparison: ValueClassComparison) {
+private fun ValueClassResultCard(result: ValueClassResult) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(comparison.testName, style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                result.testName,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
             
+
+            
+            // Value Class
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text("With Value Class:", style = MaterialTheme.typography.bodySmall)
-                    Text("${comparison.withValueClass.executionTimeNs / 1000} µs", 
-                        color = Color(0xFF4CAF50))
-                    Text("Objects: ${comparison.withValueClass.objectsAllocated}")
-                    Text("Memory: ${comparison.withValueClass.memoryUsedBytes} B")
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Value Class",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xFF4CAF50)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    
+                    Text("Thời gian: ${String.format(Locale.US, "%.2f", result.valueClassTime / 1_000.0)} µs")
+
+                    val memDiff = result.valueClassMemoryAfter - result.valueClassMemory
+                    Text("Memory tăng: ${String.format(Locale.US, "%,d", memDiff / 1024)} KB")
+                    
+                    Text("Objects: ~0 (inlined)")
                 }
-                Column {
-                    Text("Without:", style = MaterialTheme.typography.bodySmall)
-                    Text("${comparison.withoutValueClass.executionTimeNs / 1000} µs", 
-                        color = Color(0xFFF44336))
-                    Text("Objects: ${comparison.withoutValueClass.objectsAllocated}")
-                    Text("Memory: ${comparison.withoutValueClass.memoryUsedBytes} B")
+                
+                // Regular Class
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Regular Class",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xFFF44336)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    
+                    Text("Thời gian: ${String.format(Locale.US, "%.2f", result.regularClassTime / 1_000.0)} µs")
+
+                    val memDiff = result.regularClassMemoryAfter - result.regularClassMemory
+                    Text("Memory tăng: ${String.format(Locale.US, "%,d", memDiff / 1024)} KB")
+                    
+                    Text("Objects: ~${String.format(Locale.US, "%,d", result.iterations)}")
                 }
             }
             
-            Spacer(Modifier.height(4.dp))
-            Text("💾 Tiết kiệm: ${String.format("%.1f", comparison.memoryReduction)}% memory",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleSmall)
+            HorizontalDivider()
+            
+            // So sánh
+            Column {
+                Text(
+                    "Kết quả:",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.height(8.dp))
+                
+                val memValue = result.valueClassMemoryAfter - result.valueClassMemory
+                val memRegular = result.regularClassMemoryAfter - result.regularClassMemory
+                val memSaved = if (memRegular > 0) {
+                    ((memRegular - memValue).toDouble() / memRegular * 100)
+                } else {
+                    0.0
+                }
+                
+                Text(
+                    "✓ Value Class tiết kiệm ~${String.format(Locale.US, "%.0f", memSaved)}% bộ nhớ",
+                    color = Color(0xFF4CAF50),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                val timeDiff = if (result.valueClassTime > 0) {
+                    ((result.regularClassTime - result.valueClassTime).toDouble() / result.valueClassTime * 100)
+                } else {
+                    0.0
+                }
+
+                if (timeDiff > 5) {
+                    Text(
+                        "✓ Value Class nhanh hơn ~${String.format(Locale.US, "%.0f", timeDiff)}%",
+                        color = Color(0xFF4CAF50),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+            }
         }
     }
 }
 
-@Composable
-private fun InlineFunctionResultCard(comparison: InlineFunctionComparison) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(comparison.testName, style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
-            
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text("Inline:", style = MaterialTheme.typography.bodySmall)
-                    Text("${comparison.withInline.executionTimeNs / 1000} µs", 
-                        color = Color(0xFF4CAF50))
-                    Text("Objects: ${comparison.withInline.objectsAllocated}")
-                }
-                Column {
-                    Text("Regular:", style = MaterialTheme.typography.bodySmall)
-                    Text("${comparison.withoutInline.executionTimeNs / 1000} µs", 
-                        color = Color(0xFFF44336))
-                    Text("Objects: ${comparison.withoutInline.objectsAllocated}")
-                }
-            }
-            
-            Spacer(Modifier.height(4.dp))
-            Text("⚡ Speedup: ${String.format("%.2f", comparison.speedup)}x",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleSmall)
-        }
-    }
-}

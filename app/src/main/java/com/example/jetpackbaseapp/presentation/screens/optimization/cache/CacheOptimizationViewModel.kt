@@ -64,14 +64,14 @@ class CacheOptimizationViewModel @Inject constructor(
                 // ==================== CẤP ĐỘ 1: MEMORY CACHE ====================
                 // ID: Định danh duy nhất của item (ví dụ: Item #1, Item #2, ...)
                 // Dùng để: Tìm kiếm item có id này trong cache/database/network
-                //
+                // 
                 // Ví dụ: id = 5 → Tìm "Item #5"
-                //
+                // 
                 // Lưu trữ: RAM (bộ nhớ chính)
                 // Tốc độ: NHANH NHẤT (~ns)
                 // Dung lượng: NHỎ (chỉ vài MB)
                 // Sống bao lâu: Khi ứng dụng đóng → mất dữ liệu
-                //
+                // 
                 // Ưu điểm:
                 // - Truy cập cực nhanh (trong cùng process)
                 // - Phù hợp dữ liệu thường dùng (session, user data)
@@ -93,9 +93,9 @@ class CacheOptimizationViewModel @Inject constructor(
 
                 // ==================== CẤP ĐỘ 2: DISK CACHE (DATABASE) ====================
                 // ID: Dùng để query database tìm item có id này
-                //
+                // 
                 // Ví dụ: SELECT * FROM cache_table WHERE id = 5
-                //
+                // 
                 // Lưu trữ: Ổ cứng / Flash storage (SQLite, Room)
                 // Tốc độ: CHẬM (~ms)
                 // Dung lượng: LỚN (vài MB đến GB)
@@ -124,9 +124,9 @@ class CacheOptimizationViewModel @Inject constructor(
 
                 // ==================== CẤP ĐỘ 3: NETWORK ====================
                 // ID: Dùng để gửi request lên server tìm item có id này
-                //
+                // 
                 // Ví dụ: GET /api/items/5 → Server trả về Item #5 từ database
-                //
+                // 
                 // Lưu trữ: Server (Internet)
                 // Tốc độ: CHẬM NHẤT (~s)
                 // Dung lượng: VÔ HẠN (cloud server)
@@ -184,15 +184,15 @@ class CacheOptimizationViewModel @Inject constructor(
             try {
                 // ==================== KHÔNG DÙNG CACHE ====================
                 // Luôn fetch từ network, bỏ qua memory cache và disk cache
-                //
+                // 
                 // Kịch bản: Người dùng muốn dữ liệu mới nhất (refresh)
                 // hoặc test xem network tốn bao lâu
-                //
-                // Kết quả:
+                // 
+                // Kết quả: 
                 // - Thời gian CHẬM (phải fetch network ~1500ms)
                 // - Không lợi dụng cache đã lưu trước đó
                 // - Lãng phí bandwidth/data (fetch lại dữ liệu cũ)
-                //
+                // 
                 // So sánh:
                 // - Lần 1 với cache: Memory ❌ → Disk ❌ → Network ✅ (~1500ms)
                 // - Lần 2 với cache: Memory ✅ (~ns) - RẤT NHANH!

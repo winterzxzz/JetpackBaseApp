@@ -9,34 +9,42 @@ import androidx.compose.runtime.Stable
 @Stable
 data class AdvancedOptimizationState(
     val isLoading: Boolean = false,
-    val valueClassResults: List<ValueClassComparison> = emptyList(),
-    val inlineFunctionResults: List<InlineFunctionComparison> = emptyList(),
-    val strongSkippingDemo: StrongSkippingStats = StrongSkippingStats(),
+    val valueClassResult: ValueClassResult? = null,
     val error: String = ""
 )
 
-data class ValueClassComparison(
+/**
+ * Kết quả so sánh Value Class vs Regular Class
+ */
+data class ValueClassResult(
     val testName: String,
-    val withValueClass: PerformanceMetrics,
-    val withoutValueClass: PerformanceMetrics,
-    val memoryReduction: Double // Percentage
+    
+    // Value Class metrics
+    val valueClassTime: Long,        // nanoseconds
+    val valueClassMemory: Long,      // bytes trước test
+    val valueClassMemoryAfter: Long, // bytes sau test
+    
+    // Regular Class metrics  
+    val regularClassTime: Long,        // nanoseconds
+    val regularClassMemory: Long,      // bytes trước test
+    val regularClassMemoryAfter: Long, // bytes sau test
+    
+    // Iterations để tính objects
+    val iterations: Int
 )
 
-data class InlineFunctionComparison(
-    val testName: String,
-    val withInline: PerformanceMetrics,
-    val withoutInline: PerformanceMetrics,
-    val speedup: Double
-)
+/**
+ * ==================== VALUE CLASS ====================
+ * @JvmInline = Compiler inline thành primitive type
+ * Zero-cost wrapper: Có type safety compile-time, nhưng không tốn memory runtime
+ */
+@JvmInline
+value class UserId(val value: Int)
 
-data class PerformanceMetrics(
-    val executionTimeNs: Long,
-    val objectsAllocated: Long,
-    val memoryUsedBytes: Long
-)
+/**
+ * Regular class để so sánh
+ * Tạo object mới mỗi lần khởi tạo
+ */
+data class RegularUserId(val value: Int)
 
-data class StrongSkippingStats(
-    val recompositionsSkipped: Int = 0,
-    val recompositionsExecuted: Int = 0,
-    val skipRate: Float = 0f
-)
+

@@ -45,7 +45,7 @@ fun OptimizationMenuScreen(
         ),
         OptimizationDemo(
             title = "4. Tối ưu Nâng cao 🚀",
-            description = "Value Classes, Inline, Strong Skipping, Baseline Profile",
+            description = "Value Classes",
             icon = Icons.Default.Build,
             route = "advanced_demo",
             color = MaterialTheme.colorScheme.error
